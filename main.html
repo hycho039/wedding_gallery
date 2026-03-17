@@ -38,23 +38,22 @@ document.getElementById('photoInput').addEventListener('change', function(e) {
 
         fetch(scriptURL, {
             method: 'POST',
-            mode: 'no-cors', // GAS의 리다이렉션 특성상 응답을 직접 읽지 못할 수 있어 추가
-            cache: 'no-cache',
-            headers: {
-                'Content-Type': 'text/plain;charset=utf-8',
-            },
+            // mode: 'no-cors'를 절대 쓰지 마세요 (에러를 숨깁니다)
             body: JSON.stringify(data)
         })
-        .then(() => {
-            // mode: 'no-cors' 사용 시 응답 데이터를 읽을 수 없으므로 
-            // 에러가 나지 않으면 성공으로 간주합니다.
-            status.innerText = "❤️ 소중한 사진이 전달되었습니다. 감사합니다!";
-            status.style.color = "#2563eb";
+        .then(res => res.json())
+        .then(response => {
+            if(response.result === 'success') {
+                status.innerText = "❤️ 소중한 사진이 전달되었습니다!";
+            } else {
+                // GAS 내부에서 에러가 난 경우
+                status.innerText = "❌ 서버 에러: " + response.error;
+            }
         })
         .catch(err => {
-            console.error(err);
-            status.innerText = "❌ 전송에 실패했습니다. 다시 시도해주세요.";
-            status.style.color = "red";
+            // 네트워크 자체가 막힌 경우 (CORS 등)
+            console.error("Fetch 에러:", err);
+            status.innerText = "❌ 전송 중 오류가 발생했습니다. (콘솔 확인)";
         });
     };
     reader.readAsDataURL(file);
