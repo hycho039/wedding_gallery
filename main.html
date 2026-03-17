@@ -1,0 +1,52 @@
+<div class="upload-section" style="text-align:center; padding:20px; border-top:1px solid #eee;">
+    <h3 style="color:#2563eb;">📷 사진 선물하기</h3>
+    <p style="font-size:0.9em; color:#666;">저희의 소중한 순간을 담은 사진을 보내주세요!</p>
+    
+    <input type="file" id="photoInput" accept="image/*" style="display:none;">
+    <label for="photoInput" style="display:inline-block; padding:10px 20px; background:#2563eb; color:white; border-radius:5px; cursor:pointer; margin-bottom:10px;">
+        사진 선택하기
+    </label>
+    <div id="status" style="margin-top:10px; font-size:0.9em; color:#2563eb;"></div>
+</div>
+
+<script>
+document.getElementById('photoInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const status = document.getElementById('status');
+    status.innerText = "전송 중입니다. 잠시만 기다려주세요...";
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64 = e.target.result.split(',')[1];
+        const data = {
+            base64: base64,
+            contentType: file.type,
+            filename: file.name
+        };
+
+        // GAS 웹 앱 URL을 여기에 넣으세요
+        const scriptURL = "https://script.google.com/macros/s/AKfycbyUVe1nGxeG5Zj2EIdwIZVaXyVLjseKq1P89e7UEmVMqc_7_58xGLvIWRt5BfcXuadz/exec";
+
+        fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        })
+        .then(res => res.json())
+        .then(response => {
+            if(response.result === 'success') {
+                status.innerText = "❤️ 소중한 사진이 전달되었습니다. 감사합니다!";
+                status.style.color = "#2563eb";
+            } else {
+                throw new Error();
+            }
+        })
+        .catch(err => {
+            status.innerText = "❌ 전송에 실패했습니다. 다시 시도해주세요.";
+            status.style.color = "red";
+        });
+    };
+    reader.readAsDataURL(file);
+});
+</script>
