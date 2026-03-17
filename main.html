@@ -14,8 +14,15 @@ document.getElementById('photoInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // 파일 크기 제한 (구글 스크립트 전송 제한 약 50MB, 안전하게 10MB 권장)
+    if (file.size > 10 * 1024 * 1024) {
+        alert("파일이 너무 큽니다. 10MB 이하의 사진을 선택해주세요.");
+        return;
+    }
+
     const status = document.getElementById('status');
     status.innerText = "전송 중입니다. 잠시만 기다려주세요...";
+    status.style.color = "#2563eb";
 
     const reader = new FileReader();
     reader.onload = function(e) {
@@ -26,23 +33,26 @@ document.getElementById('photoInput').addEventListener('change', function(e) {
             filename: file.name
         };
 
-        // GAS 웹 앱 URL을 여기에 넣으세요
-        const scriptURL = "https://script.google.com/macros/s/AKfycbyfOjThior8gmXfMNy4VRtMUgqOfc5ED5eITesutkc4/dev";
+        // 새로 배포한 /exec 주소를 여기에 넣으세요
+        const scriptURL = "https://script.google.com/macros/s/여기에_새로_받은_ID/exec";
 
         fetch(scriptURL, {
             method: 'POST',
+            mode: 'no-cors', // GAS의 리다이렉션 특성상 응답을 직접 읽지 못할 수 있어 추가
+            cache: 'no-cache',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8',
+            },
             body: JSON.stringify(data)
         })
-        .then(res => res.json())
-        .then(response => {
-            if(response.result === 'success') {
-                status.innerText = "❤️ 소중한 사진이 전달되었습니다. 감사합니다!";
-                status.style.color = "#2563eb";
-            } else {
-                throw new Error();
-            }
+        .then(() => {
+            // mode: 'no-cors' 사용 시 응답 데이터를 읽을 수 없으므로 
+            // 에러가 나지 않으면 성공으로 간주합니다.
+            status.innerText = "❤️ 소중한 사진이 전달되었습니다. 감사합니다!";
+            status.style.color = "#2563eb";
         })
         .catch(err => {
+            console.error(err);
             status.innerText = "❌ 전송에 실패했습니다. 다시 시도해주세요.";
             status.style.color = "red";
         });
